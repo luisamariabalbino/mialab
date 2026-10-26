@@ -68,7 +68,7 @@ class FeatureExtractor:
             structure.BrainImage: The image with extracted features.
         """
         # todo: add T2w features
-        warnings.warn('No features from T2-weighted image extracted.')
+        # warnings.warn('No features from T2-weighted image extracted.')
 
         if self.coordinates_feature:
             atlas_coordinates = fltr_feat.AtlasCoordinates()
@@ -76,7 +76,12 @@ class FeatureExtractor:
                 atlas_coordinates.execute(self.img.images[structure.BrainImageTypes.T1w])
 
         if self.intensity_feature:
-            self.img.feature_images[FeatureImageTypes.T1w_INTENSITY] = self.img.images[structure.BrainImageTypes.T1w]
+            self.img.feature_images[FeatureImageTypes.T1w_INTENSITY] = \
+                self.img.images[structure.BrainImageTypes.T1w]
+
+            self.img.feature_images[FeatureImageTypes.T2w_INTENSITY] = \
+                self.img.images[structure.BrainImageTypes.T2w]
+
 
         if self.gradient_intensity_feature:
             # compute gradient magnitude images
@@ -112,6 +117,17 @@ class FeatureExtractor:
                 [0.0003, 0.004, 0.003, 0.04, 0.04, 0.02])
 
             # convert the mask to a logical array where value 1 is False and value 0 is True
+
+            gt_array = sitk.GetArrayFromImage(
+            self.img.images[structure.BrainImageTypes.GroundTruth]
+            )
+            mask_array = sitk.GetArrayFromImage(mask)
+
+            for label in [0, 1, 2, 3, 4, 5]:
+                selected = np.sum((gt_array == label) & (mask_array == 1))
+                total = np.sum(gt_array == label)
+                print(f'Label {label}: selected {selected} of {total} voxels')
+
             mask = sitk.GetArrayFromImage(mask)
             mask = np.logical_not(mask)
 
